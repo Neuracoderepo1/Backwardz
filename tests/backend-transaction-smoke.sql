@@ -28,7 +28,7 @@ BEGIN
 
   FOR i IN 1..8 LOOP
     v_seed := mod(20261119::numeric * 100 + (i - 1), 4294967296)::bigint;
-    v_variance := least(0.9::numeric, 0.1::numeric + i * 0.08::numeric);
+    v_variance := least(0.9::double precision, 0.1::double precision + i * 0.08::double precision)::numeric;
     v_result := public.backward_submit_trial(v_run, v_player, i::smallint, i::smallint, least(3+i,12)::smallint, 8::smallint, v_variance, v_seed, 0, 1000, 0);
     IF NOT (v_result->>'ok')::boolean THEN RAISE EXCEPTION 'Trial % failed: %', i, v_result; END IF;
     v_result := public.backward_submit_trial(v_run, v_player, i::smallint, i::smallint, least(3+i,12)::smallint, 8::smallint, v_variance, v_seed, 0, 1000, 0);
@@ -79,7 +79,7 @@ BEGIN
 
   FOR i IN 1..8 LOOP
     v_seed := mod(20261119::numeric * 100 + (i - 1), 4294967296)::bigint;
-    v_variance := least(0.9::numeric, 0.1::numeric + i * 0.08::numeric);
+    v_variance := least(0.9::double precision, 0.1::double precision + i * 0.08::double precision)::numeric;
     v_result := public.backward_submit_trial(v_run, v_player, i::smallint, i::smallint, least(3+i,12)::smallint, 8::smallint, v_variance, v_seed, 0, 1000, 0);
     IF NOT (v_result->>'ok')::boolean THEN RAISE EXCEPTION 'Trial % failed: %', i, v_result; END IF;
   END LOOP;
