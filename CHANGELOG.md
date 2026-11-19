@@ -7,6 +7,7 @@
 - Added finalization retry and local active-run recovery after refresh.
 - Improved iOS viewport/safe-area handling, touch hit-testing, orientation updates and pause/resume when the browser is backgrounded.
 - Added transactional trial acceptance with run-row locking and idempotent exact retries.
+- Normalized trial-variance replay comparison to the server-derived canonical value, covering JavaScript floating-point serialization edge cases.
 - Added atomic finalization and public leaderboard projection repair.
 - Deployed Supabase Edge Function version 5 with JWT verification enabled.
 - Applied additive migration `backward_atomic_trial_and_finalization`; no table data or RLS policies changed.
