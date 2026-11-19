@@ -13,6 +13,7 @@
 - Added `backward_submit_trial`: locks the owning run row, serializes round submissions, checks order and game limits, and returns an identical accepted submission as an idempotent success. Conflicting replays are rejected.
 - Added `backward_finalize_run`: locks the run, recomputes the score, marks completion, updates the private leaderboard and upserts the public projection in one PostgreSQL transaction.
 - A retry against an already-completed run re-synchronizes the private/public leaderboard projection, repairing the previous partial-publication failure mode.
+- Trial replay compares the persisted speed variance to the canonical server-derived variance, not the raw JSON floating-point value, so identical retries remain idempotent across decimal serialization.
 - Both RPCs are SECURITY DEFINER with a fixed search_path and EXECUTE granted only to service_role. No RLS policy or table privilege was loosened.
 - Edge Function version 5 adds owner-checked resume retrieval and delegates trial/finalization writes to the transactional RPCs.
 
