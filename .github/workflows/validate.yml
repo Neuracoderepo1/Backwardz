@@ -28,7 +28,11 @@ jobs:
           name: backwardz-manual-deploy
           path: |
             index.html
+            index 5.html
             README.md
             DEPLOYMENT.md
             SECURITY-REVIEW.md
             CHANGELOG.md
+            supabase/
+            tests/
+            .github/workflows/
