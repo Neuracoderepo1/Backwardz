@@ -143,7 +143,8 @@ async function resume(){
   if(run.status!=='in_progress')throw new Error('This saved game is no longer active.');
   newRound();
  }catch(error){
-  store('backward_active_run','');$('br').hidden=true;$('br').disabled=false;
+  if(error.message.includes('Saved run not found')||error.message.includes('no longer active'))store('backward_active_run','');
+  $('start').classList.remove('hide');$('br').hidden=!store('backward_active_run');$('br').disabled=false;
   $('playstatus').textContent='Could not resume saved game: '+error.message;
  }
 }
