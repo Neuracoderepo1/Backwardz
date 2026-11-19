@@ -21,7 +21,7 @@ node tests/validate.mjs
 For transactional database verification, run `tests/backend-transaction-smoke.sql` in the Supabase SQL editor. It creates test rows inside an explicit transaction and rolls the entire test back. It requires at least one existing `backward_players` row.
 
 ## Supabase deployment
-The current production Edge Function is version 5. Its source is mirrored under `supabase/functions/backward-game/`. Migration `20261119195800_backward_atomic_trial_and_finalization.sql` creates the atomic RPC operations. Migration `20261119200600_backward_trial_idempotency_precision.sql` normalizes the retry comparison for JavaScript floating-point serialization.
+The current production Edge Function is version 5. Its source is mirrored under `supabase/functions/backward-game/`. Migration `20261119195820_backward_atomic_trial_and_finalization.sql` creates the atomic RPC operations. Migration `20261119200546_backward_trial_idempotency_precision.sql` normalizes the retry comparison for JavaScript floating-point serialization.
 
 Do not expose the service-role key in the frontend. Do not weaken RLS to resolve client permission errors.
 
