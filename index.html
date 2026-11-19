@@ -150,7 +150,7 @@ async function resume(){
 }
 async function settle(ok,rt,responseIndex){
  if(st.phase!=='play')return;
- st.phase='saving';rt=Math.min(Math.round(rt),Math.round(st.limit*1000));st.log.push(ok);
+ st.phase='reveal';rt=Math.min(Math.round(rt),Math.round(st.limit*1000));st.log.push(ok);
  if(ok){var left=Math.max(0,st.limit*1000-rt)/1000;st.combo++;st.score+=Math.round((10+left*10)*(1+st.combo*.1));st.rts.push(rt);st.L++;}
  else{st.combo=0;if(st.mode==='endless')st.lives--;}
  const payload={action:'submit_trial',run_id:st.runId,round_index:st.round+1,level:ok?st.L-1:st.L,grid_cols:st.cols,grid_rows:st.rows,speed_variance:Math.min(.9,.1+(ok?st.L-1:st.L)*.08),response_cell_index:responseIndex,rt_ms:rt};
@@ -164,8 +164,8 @@ async function settle(ok,rt,responseIndex){
  }
 }
 function continueAfterTrial(ok){
- st.round++;hud();$('playstatus').textContent='Round saved.';
- setTimeout(function(){var over=st.mode==='endless'?st.lives<=0:st.round>=DAILY_ROUNDS;if(over)finish();else newRound();},ok?350:1100);
+ st.phase='reveal';st.round++;hud();$('playstatus').textContent='Round saved.';
+ setTimeout(function(){var over=st.mode==='endless'?st.lives<=0:st.round>=DAILY_ROUNDS;if(over)finish();else newRound();},ok?700:1100);
 }
 async function retryTrial(){
  if(!st.failedTrialPayload||st.phase!=='sync-error')return;
