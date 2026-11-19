@@ -21,6 +21,11 @@ BEGIN
   VALUES (v_player, 'daily', DATE '2099-01-01', 20261119, 'unknown', 'rollback-test')
   RETURNING id INTO v_run;
 
+  v_result := public.backward_submit_trial(v_run, gen_random_uuid(), 1::smallint, 1::smallint, 4::smallint, 8::smallint, 0.18::numeric, 2026111900::bigint, 0, 1000, 0);
+  IF (v_result->>'ok')::boolean OR (v_result->>'status')::integer <> 404 THEN
+    RAISE EXCEPTION 'Cross-player trial access was not rejected: %', v_result;
+  END IF;
+
   v_result := public.backward_submit_trial(v_run, v_player, 2::smallint, 1::smallint, 4::smallint, 8::smallint, 0.18::numeric, 2026111901::bigint, 0, 1000, 0);
   IF (v_result->>'ok')::boolean OR (v_result->>'status')::integer <> 409 THEN
     RAISE EXCEPTION 'Out-of-order submission was not rejected: %', v_result;
@@ -49,16 +54,23 @@ BEGIN
      OR NOT (v_result->>'leaderboard_published')::boolean THEN
     RAISE EXCEPTION 'Finalization failed: %', v_result;
   END IF;
+  DELETE FROM public.backward_daily_leaderboard_public
+  WHERE id IN (SELECT id FROM public.backward_daily_leaderboard WHERE run_id = v_run);
   v_result := public.backward_finalize_run(v_run, v_player, 0);
   IF NOT (v_result->>'ok')::boolean OR NOT (v_result->>'already_completed')::boolean THEN
     RAISE EXCEPTION 'Completed-run retry failed: %', v_result;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.backward_daily_leaderboard_public p
+                 JOIN public.backward_daily_leaderboard l ON l.id = p.id
+                 WHERE l.run_id = v_run) THEN
+    RAISE EXCEPTION 'Completed-run retry did not repair the public projection';
   END IF;
 END;
 $trial_and_retry$;
 
 -- Force public-projection failure for a second, isolated daily run. The
 -- failed function call must roll back the run completion and private entry.
-ALTER TABLE public.backward_daily_leaderboard
+ALTER TABLE public.backward_daily_leaderboard_public
   ADD CONSTRAINT backward_test_force_projection_failure CHECK (score < 0) NOT VALID;
 
 DO $atomicity$
@@ -100,7 +112,7 @@ BEGIN
 END;
 $atomicity$;
 
-ALTER TABLE public.backward_daily_leaderboard
+ALTER TABLE public.backward_daily_leaderboard_public
   DROP CONSTRAINT backward_test_force_projection_failure;
 
 DO $repair$
