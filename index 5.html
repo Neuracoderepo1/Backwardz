@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BACKWARD — find the reversed orbit</title>
+<style>
+:root{--bg:#f3f2fb;--fg:#15152b;--mut:#5c5c7e;--ring:#a9a9cc;--dot:#15152b;--acc:#0a8f6a;--bad:#d11f46;--pan:#ffffffee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b1a;--fg:#f4f4ff;--mut:#9a9ab8;--ring:#4a4a7a;--dot:#fff;--acc:#7cf0c8;--bad:#ff5c7a;--pan:#0b0b1af0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b0b1a;--fg:#f4f4ff;--mut:#9a9ab8;--ring:#4a4a7a;--dot:#fff;--acc:#7cf0c8;--bad:#ff5c7a;--pan:#0b0b1af0;color-scheme:dark}
+html,body{height:100%;margin:0}body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:none;user-select:none}
+header{text-align:center;padding:10px 12px 4px}h1{margin:0;font-size:clamp(22px,6vw,34px);font-weight:900;letter-spacing:.02em}.sub{color:var(--mut);font-size:14px;margin-top:2px}
+.hud{display:flex;justify-content:space-between;gap:8px;padding:4px 14px;font-weight:700;font-size:15px}.bar{height:5px;margin:2px 14px 6px;background:var(--ring);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:var(--acc)}
+#wrap{flex:1;min-height:0;position:relative}canvas{width:100%;height:100%;display:block;touch-action:manipulation}.ov{position:absolute;inset:0;background:var(--pan);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;overflow:auto}.ov.hide{display:none}.ov h2{margin:0;font-size:28px}.ov p{margin:0;color:var(--mut);max-width:34ch;line-height:1.4}
+button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:14px 22px;min-width:220px;background:var(--acc);color:var(--bg);cursor:pointer}button.alt{background:transparent;color:var(--fg);border:2px solid var(--ring)}button:disabled{opacity:.55;cursor:wait}.big{font-size:44px;font-weight:900}#sync{font-size:13px;color:var(--mut);max-width:38ch}#lb{width:min(100%,360px);font-size:13px;color:var(--mut);text-align:left}#lb ol{margin:6px 0 0;padding-left:24px}#lb li{padding:2px 0}#lb strong{color:var(--fg)}
+</style>
+</head>
+<body>
+<header><h1>FIND THE ONE GOING BACKWARD</h1><div class="sub">Only one orbit moves the other way</div></header>
+<div class="hud"><span id="lv">Lv 1</span><span id="sc">0</span><span id="lf"></span></div>
+<div class="bar"><i id="tb"></i></div>
+<div id="wrap">
+<canvas id="cv" aria-label="Find and tap the orbit moving in the opposite direction"></canvas>
+<div class="ov" id="start">
+<h2>Trust your eyes</h2>
+<p>Tap the orbit spinning the wrong way. Grids grow, speeds vary, time shrinks.</p>
+<button id="bd">Daily Challenge · 8 rounds</button>
+<button id="be" class="alt">Endless · 3 lives</button>
+<p id="best"></p><p id="authstatus">Connecting securely when you start…</p>
+</div>
+<div class="ov hide" id="end">
+<h2 id="et">Run over</h2><div class="big" id="es">0</div><p id="ed"></p><div id="sync" role="status"></div><div id="lb"></div>
+<button id="bs">Share result</button><button id="ba" class="alt">Play again</button>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"></script>
+<script>
+
+(function(){
+const status=document.getElementById('authstatus');
+if(!window.supabase || typeof window.supabase.createClient!=='function'){status.textContent='Game scripts did not load. Open this page in Safari or Chrome, not the Files preview.';return;}
+status.textContent='Game ready. Choose Daily Challenge or Endless.';
+const {createClient}=window.supabase;
+const SUPABASE_URL='https://tmwwxsteyvuflyramuad.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_xMQE1M2O9mR53S4rBUD_Qg__z-U0FrU';
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const API=SUPABASE_URL+'/functions/v1/backward-game';
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+function rng(a){a=a>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+const st={mode:'',L:1,score:0,combo:0,lives:3,round:0,cells:[],odd:-1,t0:0,limit:12,phase:'idle',rts:[],log:[],flash:-1,seed:0,cols:4,rows:5,cell:50,W:0,H:0,offsetX:0,offsetY:0,runId:null,challengeDate:null,pendingSync:Promise.resolve(),syncFailed:false};
+const DAILY_ROUNDS=8;
+async function ensureSession(){
+ let {data:{session}}=await supabase.auth.getSession();
+ if(!session){const result=await supabase.auth.signInAnonymously();if(result.error)throw result.error;session=result.data.session;}
+ if(!session)throw new Error('Could not establish an anonymous player session.');
+ return session;
+}
+async function api(payload){
+ const {data:{session}}=await supabase.auth.getSession();
+ if(!session?.access_token)throw new Error('Player session expired.');
+ const response=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(payload)});
+ const data=await response.json().catch(()=>({error:'Invalid server response'}));
+ if(!response.ok)throw new Error(data.error||'Server request failed ('+response.status+')');
+ return data;
+}
+function resize(){
+ const d=window.devicePixelRatio||1;st.W=cv.clientWidth;st.H=cv.clientHeight;cv.width=Math.round(st.W*d);cv.height=Math.round(st.H*d);ctx.setTransform(d,0,0,d,0,0);
+ if(st.cols&&st.rows){st.cell=Math.min(st.W/st.cols,st.H/st.rows);st.offsetX=(st.W-st.cols*st.cell)/2;st.offsetY=(st.H-st.rows*st.cell)/2;}
+}
+function newRound(){
+ var L=st.L;st.cols=Math.min(3+L,12);var initialCell=st.W/st.cols;st.rows=8;resize();
+ var r=rng((st.seed*100+st.round)>>>0),n=st.cols*st.rows,jit=Math.min(.9,.1+L*.08);st.cells=[];
+ for(var i=0;i<n;i++)st.cells.push({p:r()*6.283,w:1.4+(r()-.5)*jit*1.3,d:1});
+ st.odd=Math.floor(r()*n);st.cells[st.odd].d=-1;st.limit=Math.max(5,14-L*.7);st.t0=performance.now();st.phase='play';st.flash=-1;hud();
+}
+function hud(){$('lv').textContent='Lv '+st.L+(st.combo>1?' · x'+st.combo:'');$('sc').textContent=st.score;$('lf').textContent=st.mode==='endless'?'♥'.repeat(Math.max(0,st.lives)):'Round '+Math.min(st.round+1,DAILY_ROUNDS)+'/'+DAILY_ROUNDS;}
+async function start(mode){
+ $('bd').disabled=true;$('be').disabled=true;$('authstatus').textContent='Creating your player session…';
+ try{
+  await ensureSession();
+  const device=window.innerWidth<700?'mobile':window.innerWidth<1100?'tablet':'desktop';
+  const run=await api({action:'start_run',mode,device_class:device,client_version:'1.1.0'});
+  st.mode=mode;st.L=1;st.score=0;st.combo=0;st.lives=3;st.round=0;st.rts=[];st.log=[];st.seed=Number(run.seed);st.challengeDate=run.challenge_date;st.runId=run.run_id;st.pendingSync=Promise.resolve();st.syncFailed=false;
+  $('start').classList.add('hide');$('end').classList.add('hide');newRound();
+ }catch(error){$('authstatus').textContent='Could not connect: '+error.message;$('bd').disabled=false;$('be').disabled=false;}
+}
+function settle(ok,rt,responseIndex){
+ if(st.phase!=='play')return;
+ st.phase='reveal';rt=Math.min(Math.round(rt),Math.round(st.limit*1000));st.log.push(ok);
+ if(ok){var left=Math.max(0,st.limit*1000-rt)/1000;st.combo++;st.score+=Math.round((10+left*10)*(1+st.combo*.1));st.rts.push(rt);st.L++;}
+ else{st.combo=0;if(st.mode==='endless')st.lives--;}
+ const payload={action:'submit_trial',run_id:st.runId,round_index:st.round+1,level:ok?st.L-1:st.L,grid_cols:st.cols,grid_rows:st.rows,speed_variance:Math.min(.9,.1+(ok?st.L-1:st.L)*.08),response_cell_index:responseIndex,rt_ms:rt};
+ st.pendingSync=st.pendingSync.then(()=>api(payload)).catch(error=>{st.syncFailed=true;console.error('BACKWARD trial sync failed:',error);});
+ st.round++;hud();
+ setTimeout(function(){var over=st.mode==='endless'?st.lives<=0:st.round>=DAILY_ROUNDS;if(over)finish();else newRound();},ok?350:1100);
+}
+async function finish(){
+ st.phase='idle';var avg=st.rts.length?Math.round(st.rts.reduce((a,b)=>a+b,0)/st.rts.length):0;
+ var key='best_'+st.mode,prev=+store(key)||0,nb=st.score>prev;if(nb)store(key,String(st.score));
+ $('et').textContent=nb?'New best!':'Run over';$('es').textContent=st.score;
+ $('ed').textContent=st.log.filter(Boolean).length+' correct · reached Lv '+st.L+(avg?' · avg '+(avg/1000).toFixed(1)+'s':'');
+ $('end').classList.remove('hide');$('sync').textContent='Verifying your run…';$('lb').textContent='';
+ try{
+  await st.pendingSync;if(st.syncFailed)throw new Error('One or more round records could not be saved.');
+  const result=await api({action:'finish_run',run_id:st.runId,claimed_score:st.score});
+  $('es').textContent=result.verified_score;
+  $('sync').textContent=result.score_matches?'✓ Score verified and saved.':'✓ Server-verified score: '+result.verified_score+' (local display differed).';
+  if(st.mode==='daily')await loadLeaderboard();
+ }catch(error){$('sync').textContent='Not verified yet: '+error.message+'. Keep this browser session; do not treat this score as a leaderboard result.';}
+}
+async function loadLeaderboard(){
+ const {data,error}=await supabase.from('backward_daily_leaderboard_public').select('display_name,score,rounds_completed,achieved_at').eq('challenge_date',st.challengeDate).order('score',{ascending:false}).order('achieved_at',{ascending:true}).limit(10);
+ if(error){$('lb').textContent='Leaderboard temporarily unavailable.';return;}
+ const wrap=document.createElement('div');const heading=document.createElement('strong');heading.textContent='Daily leaderboard';wrap.appendChild(heading);const list=document.createElement('ol');
+ (data||[]).forEach(row=>{const li=document.createElement('li');const name=document.createElement('span');name.textContent=row.display_name+' ';const score=document.createElement('strong');score.textContent=String(row.score);li.append(name,score);list.appendChild(li);});wrap.appendChild(list);$('lb').replaceChildren(wrap);
+}
+cv.addEventListener('pointerdown',function(e){
+ if(st.phase!=='play')return;const b=cv.getBoundingClientRect();const x=e.clientX-b.left-st.offsetX,y=e.clientY-b.top-st.offsetY;const c=Math.floor(x/st.cell),r=Math.floor(y/st.cell);
+ if(c<0||r<0||c>=st.cols||r>=st.rows)return;const i=r*st.cols+c,rt=performance.now()-st.t0;
+ if(rt>st.limit*1000){settle(false,st.limit*1000,null);return;}
+ if(i===st.odd)settle(true,rt,i);else{st.flash=i;settle(false,rt,i);}
+});
+function draw(now){
+ ctx.clearRect(0,0,st.W,st.H);var ring=css('--ring'),dot=css('--dot'),acc=css('--acc'),bad=css('--bad');var t=(now-st.t0)/1000,cell=st.cell,rad=cell*.34;
+ if(st.phase==='play'){var f=1-(now-st.t0)/(st.limit*1000);$('tb').style.width=Math.max(0,f*100)+'%';if(f<=0)settle(false,st.limit*1000,null);}
+ for(var i=0;i<st.cells.length;i++){var c=st.cells[i],cx=st.offsetX+(i%st.cols+.5)*cell,cy=st.offsetY+(Math.floor(i/st.cols)+.5)*cell;var reveal=st.phase==='reveal'&&i===st.odd;ctx.lineWidth=reveal?3:1;ctx.strokeStyle=reveal?acc:(i===st.flash?bad:ring);ctx.beginPath();ctx.arc(cx,cy,rad,0,6.283);ctx.stroke();var a=c.p+c.d*c.w*t;ctx.fillStyle=reveal?acc:(i===st.flash?bad:dot);ctx.beginPath();ctx.arc(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad,Math.max(2,cell*.075),0,6.283);ctx.fill();}
+ requestAnimationFrame(draw);
+}
+$('bd').onclick=()=>start('daily');$('be').onclick=()=>start('endless');
+$('ba').onclick=function(){$('end').classList.add('hide');$('start').classList.remove('hide');$('bd').disabled=false;$('be').disabled=false;bests();};
+$('bs').onclick=function(){var g=st.log.map(x=>x?'🟢':'🔴').join('');var txt='BACKWARD '+(st.mode==='daily'?'Daily '+st.challengeDate:'Endless')+'\n'+g+'\nScore '+$('es').textContent+' · Lv '+st.L+'\nCan you beat it?';if(navigator.share){navigator.share({text:txt}).catch(()=>copyShare(txt));}else copyShare(txt);};
+function copyShare(txt){if(navigator.clipboard?.writeText){navigator.clipboard.writeText(txt).then(()=>$('bs').textContent='Copied ✓').catch(()=>$('bs').textContent='Copy blocked');}else $('bs').textContent='Sharing unavailable';}
+function bests(){var d=store('best_daily'),e=store('best_endless');$('best').textContent=(d||e)?'Best — Daily '+(d||0)+' · Endless '+(e||0):'';}
+window.addEventListener('resize',resize);resize();bests();requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
