@@ -14,6 +14,15 @@ for (const token of [
   'visibilitychange', 'resume_run', 'backward_active_run'
 ]) assert.ok(html.includes(token), 'Missing frontend requirement: ' + token);
 
+// Regression guard: both successful selections and timeouts flow through settle(),
+// which must enter the reveal phase before the asynchronous save begins.
+assert.match(html, /async function settle\\(ok,rt,responseIndex\\)\\{\\s*if\\(st\\.phase!==['"]play['"]\\)return;\\s*st\\.phase=['"]reveal['"];?/,
+  'Selection/timeout settlement must enter the reveal phase before saving.');
+assert.match(html, /function continueAfterTrial\\(ok\\)\\{\\s*st\\.phase=['"]reveal['"];?/,
+  'The saved-round continuation must preserve the reveal phase.');
+assert.match(html, /st\\.phase===['"]reveal['"]&&i===st\\.odd/,
+  'The correct orbit must be highlighted while the reveal phase is active.');
+
 assert.doesNotMatch(html, /service_role/i);
 assert.ok(scripts.length >= 1, 'Application script not found.');
 new vm.Script(scripts[scripts.length - 1], { filename: "BACKWARDZ inline application" });
