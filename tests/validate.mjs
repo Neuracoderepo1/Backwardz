@@ -23,6 +23,13 @@ assert.ok(html.includes("function continueAfterTrial(ok){\n st.phase='reveal';")
 assert.ok(html.includes("st.phase==='reveal'&&i===st.odd"),
   'The correct orbit must be highlighted while the reveal phase is active.');
 
+// Native share rejection can happen after the tap's transient user activation expires.
+// Never attempt an asynchronous clipboard fallback from that rejection handler.
+assert.ok(html.includes("navigator.share({text:txt}).catch(function(err){$('bs').textContent=err&&err.name==='AbortError'?'Share result':'Share unavailable';});"),
+  'Native share cancellation/failure must not trigger a clipboard write outside the tap.');
+assert.ok(!html.includes('.catch(()=>copyShare(txt))'),
+  'Do not fall back to clipboard after the native share promise rejects.');
+
 assert.doesNotMatch(html, /service_role/i);
 assert.ok(scripts.length >= 1, 'Application script not found.');
 new vm.Script(scripts[scripts.length - 1], { filename: "BACKWARDZ inline application" });
