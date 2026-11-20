@@ -27,13 +27,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backwardz-manual-deploy
-          path: |
-            index.html
-            index 5.html
-            README.md
-            DEPLOYMENT.md
-            SECURITY-REVIEW.md
-            CHANGELOG.md
-            supabase/
-            tests/
-            .github/workflows/
+          path: index.html
+          if-no-files-found: error
+          retention-days: 30
