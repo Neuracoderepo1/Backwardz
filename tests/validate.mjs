@@ -22,6 +22,14 @@ assert.ok(html.includes("function continueAfterTrial(ok){\n st.phase='reveal';")
   'The saved-round continuation must preserve the reveal phase.');
 assert.ok(html.includes("st.phase==='reveal'&&i===st.odd"),
   'The correct orbit must be highlighted while the reveal phase is active.');
+assert.ok(html.includes("if(f<=0)settle(false,st.limit*1000,null);"),
+  'A round timeout must settle through the same reveal path as a selection.');
+assert.ok(html.includes("ctx.strokeStyle=reveal?acc:(i===st.flash?bad:ring)"),
+  'The correct orbit reveal must draw its ring using the success accent.');
+assert.ok(html.includes("ctx.fillStyle=reveal?acc:(i===st.flash?bad:dot)"),
+  'The correct orbit reveal must also color its moving dot using the success accent.');
+assert.ok(html.includes("},ok?700:1100);"),
+  'The reveal must remain visible before advancing after success or timeout.');
 
 // Native share rejection can happen after the tap's transient user activation expires.
 // Never attempt an asynchronous clipboard fallback from that rejection handler.
