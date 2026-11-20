@@ -154,7 +154,7 @@ async function settle(ok,rt,responseIndex){
  if(ok){var left=Math.max(0,st.limit*1000-rt)/1000;st.combo++;st.score+=Math.round((10+left*10)*(1+st.combo*.1));st.rts.push(rt);st.L++;}
  else{st.combo=0;if(st.mode==='endless')st.lives--;}
  const payload={action:'submit_trial',run_id:st.runId,round_index:st.round+1,level:ok?st.L-1:st.L,grid_cols:st.cols,grid_rows:st.rows,speed_variance:Math.min(.9,.1+(ok?st.L-1:st.L)*.08),response_cell_index:responseIndex,rt_ms:rt};
- st.failedTrialPayload=payload;st.afterTrial={correct:ok};hud();$('playstatus').textContent='Saving round '+(st.round+1)+'…';
+ st.failedTrialPayload=payload;st.afterTrial={correct:ok};hud();$('playstatus').textContent='Correct orbit revealed · saving round '+(st.round+1)+'…';
  try{await api(payload);st.failedTrialPayload=null;continueAfterTrial(ok);}
  catch(error){
   st.syncFailed=true;st.phase='sync-error';$('playstatus').textContent='Round not saved. Game paused until synchronization succeeds.';
@@ -211,7 +211,7 @@ cv.addEventListener('pointerdown',function(e){
 function draw(now){
  ctx.clearRect(0,0,st.W,st.H);var ring=css('--ring'),dot=css('--dot'),acc=css('--acc'),bad=css('--bad');var t=(now-st.t0)/1000,cell=st.cell,rad=cell*.34;
  if(st.phase==='play'){var elapsed=(now-st.t0)/1000,remaining=Math.max(0,st.limit-elapsed),f=remaining/st.limit,label=Math.ceil(remaining)+'s';$('tb').style.width=Math.max(0,f*100)+'%';$('tm').textContent=label;document.querySelector('.bar').setAttribute('aria-valuemax',String(st.limit));document.querySelector('.bar').setAttribute('aria-valuenow',String(Math.max(0,remaining.toFixed(1))));if(f<=0)settle(false,st.limit*1000,null);}
- for(var i=0;i<st.cells.length;i++){var c=st.cells[i],cx=st.offsetX+(i%st.cols+.5)*cell,cy=st.offsetY+(Math.floor(i/st.cols)+.5)*cell;var reveal=st.phase==='reveal'&&i===st.odd;ctx.lineWidth=reveal?3:1;ctx.strokeStyle=reveal?acc:(i===st.flash?bad:ring);ctx.beginPath();ctx.arc(cx,cy,rad,0,6.283);ctx.stroke();var a=c.p+c.d*c.w*t;ctx.fillStyle=reveal?acc:(i===st.flash?bad:dot);ctx.beginPath();ctx.arc(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad,Math.max(2,cell*.075),0,6.283);ctx.fill();}
+ for(var i=0;i<st.cells.length;i++){var c=st.cells[i],cx=st.offsetX+(i%st.cols+.5)*cell,cy=st.offsetY+(Math.floor(i/st.cols)+.5)*cell;var reveal=st.phase==='reveal'&&i===st.odd;if(reveal){ctx.save();ctx.shadowColor=acc;ctx.shadowBlur=Math.max(12,cell*.22);ctx.lineWidth=Math.max(5,cell*.085);ctx.strokeStyle=acc;ctx.beginPath();ctx.arc(cx,cy,rad+cell*.035,0,6.283);ctx.stroke();ctx.restore();}else{ctx.lineWidth=1;ctx.strokeStyle=i===st.flash?bad:ring;ctx.beginPath();ctx.arc(cx,cy,rad,0,6.283);ctx.stroke();}var a=c.p+c.d*c.w*t;ctx.fillStyle=reveal?acc:(i===st.flash?bad:dot);ctx.beginPath();ctx.arc(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad,reveal?Math.max(4,cell*.11):Math.max(2,cell*.075),0,6.283);ctx.fill();}
  requestAnimationFrame(draw);
 }
 $('bd').onclick=()=>start('daily');$('be').onclick=()=>start('endless');$('br').onclick=resume;$('retry').onclick=retryTrial;$('finishretry').onclick=retryFinish;
