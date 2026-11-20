@@ -24,8 +24,14 @@ assert.ok(html.includes("st.phase==='reveal'&&i===st.odd"),
   'The correct orbit must be highlighted while the reveal phase is active.');
 assert.ok(html.includes("if(f<=0)settle(false,st.limit*1000,null);"),
   'A round timeout must settle through the same reveal path as a selection.');
-assert.ok(html.includes("ctx.strokeStyle=reveal?acc:(i===st.flash?bad:ring)"),
-  'The correct orbit reveal must draw its ring using the success accent.');
+assert.ok(html.includes("ctx.shadowColor=acc;ctx.shadowBlur=Math.max(12,cell*.22)"),
+  'The revealed correct orbit must have a strong green glow for clear visibility.');
+assert.ok(html.includes("ctx.lineWidth=Math.max(5,cell*.085)"),
+  'The revealed correct orbit ring must be thick enough to distinguish clearly.');
+assert.ok(html.includes("reveal?Math.max(4,cell*.11)"),
+  'The revealed moving dot must be enlarged for clear visibility.');
+assert.ok(html.includes("Correct orbit revealed · saving round "),
+  'The reveal state must be announced while the round save is pending.');
 assert.ok(html.includes("ctx.fillStyle=reveal?acc:(i===st.flash?bad:dot)"),
   'The correct orbit reveal must also color its moving dot using the success accent.');
 assert.ok(html.includes("},ok?700:1100);"),
