@@ -17,14 +17,14 @@ jobs:
   frontend-static-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
       - name: Validate frontend, JavaScript syntax and correct-orbit reveal regression
         run: node tests/validate.mjs
       - name: Package manual Netlify deployment files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: backwardz-manual-deploy
           path: index.html
