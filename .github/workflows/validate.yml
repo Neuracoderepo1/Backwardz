@@ -1,4 +1,4 @@
-name: BACKWARDZ validation
+name: BACKWARDZ validation and release evidence
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate frontend entrypoint and JavaScript syntax
+      - name: Validate frontend, JavaScript syntax and correct-orbit reveal regression
         run: node tests/validate.mjs
       - name: Package manual Netlify deployment files
         uses: actions/upload-artifact@v4
