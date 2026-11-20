@@ -23,7 +23,9 @@
 - WARN: leaked-password protection is disabled. This is unrelated to anonymous game sign-in; no password-auth flow was introduced.
 - INFO: five indexes are currently unused. No index was removed because the project has very low row counts and these indexes may support future query patterns.
 
-## Remaining checks
-- Real iOS Safari and Mobile Chrome interaction tests have not been run by the available browser automation.
-- Anonymous sign-in was confirmed as the existing frontend onboarding flow, but a fresh anonymous sign-in was not exercised end-to-end from a real browser.
+## Remaining checks and limitations
+- Project owner directly confirmed the correct-orbit green reveal in production Safari for both successful selection and timeout. This is a targeted visual acceptance test, not a complete cross-device browser matrix.
+- Mobile Chrome has not been independently exercised in this release verification.
+- A fresh anonymous sign-in was not independently exercised end-to-end from a real browser during this verification.
 - Concurrent two-client HTTP stress tests are not yet performed. Database row locking plus uniqueness are implemented; transaction smoke tests cover sequential, duplicate, conflicting and rollback cases.
+- Native share behavior was not independently confirmed in the automated browser; the automation result is inconclusive and should not be represented as a confirmed defect or a passed native-share test.
