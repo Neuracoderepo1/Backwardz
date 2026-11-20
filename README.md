@@ -11,6 +11,8 @@ BACKWARD is a cognitive orbit-finding game. This repository preserves the recove
 
 The browser never writes authoritative run or trial rows directly. Scores are recomputed by PostgreSQL from verified trial rows.
 
+The correct-orbit reveal is explicitly held through the post-selection and timeout reveal phase before save/continuation. Native share cancellation does not trigger an asynchronous clipboard fallback, which Safari may block after transient user activation expires.
+
 ## Local checks
 Requires Node.js 18+:
 
@@ -26,4 +28,4 @@ The current production Edge Function is version 5. Its source is mirrored under 
 Do not expose the service-role key in the frontend. Do not weaken RLS to resolve client permission errors.
 
 ## Netlify
-The existing site is `backwardz` at https://backwardz.netlify.app. The root `index.html` is the static publish entrypoint. The current connected Netlify integration supports site inspection but not uploading/publishing a manual deploy. Use the site's existing manual deploy flow and upload the repository root contents; do not rename the site or change visitor access settings.
+The existing site is `backwardz` at https://backwardz.netlify.app. The root `index.html` is the only static publish entrypoint. The GitHub Actions workflow validates the frontend and packages exactly this one file as `backwardz-manual-deploy`. The connected Netlify integration supports inspection but not uploading/publishing a manual deploy. For a manual publish, upload the packaged `index.html` through the existing Netlify deploy flow. Do not upload repository documentation, tests, or Supabase migrations as site files; do not rename the site or change visitor access settings.
