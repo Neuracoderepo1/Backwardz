@@ -30,6 +30,13 @@ assert.ok(html.includes("navigator.share({text:txt}).catch(function(err){$('bs')
 assert.ok(!html.includes('.catch(()=>copyShare(txt))'),
   'Do not fall back to clipboard after the native share promise rejects.');
 
+assert.ok(html.includes('id="tm" aria-label="Time remaining"'),
+  'A visible countdown label must be present in the HUD.');
+assert.ok(html.includes('role="progressbar" aria-label="Time remaining"'),
+  'The countdown bar must expose progress semantics to assistive technology.');
+assert.ok(html.includes("$('tm').textContent=label"),
+  'The visible countdown must update during active gameplay.');
+
 assert.doesNotMatch(html, /service_role/i);
 assert.ok(scripts.length >= 1, 'Application script not found.');
 new vm.Script(scripts[scripts.length - 1], { filename: "BACKWARDZ inline application" });
