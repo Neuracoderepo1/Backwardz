@@ -14,13 +14,13 @@ for (const token of [
   'visibilitychange', 'resume_run', 'backward_active_run'
 ]) assert.ok(html.includes(token), 'Missing frontend requirement: ' + token);
 
-// Regression guard: both successful selections and timeouts flow through settle(),
-// which must enter the reveal phase before the asynchronous save begins.
-assert.match(html, /async function settle\\(ok,rt,responseIndex\\)\\{\\s*if\\(st\\.phase!==['"]play['"]\\)return;\\s*st\\.phase=['"]reveal['"];?/,
+// Regression guard: successful selections and timeouts share settle(),
+// which must enter reveal before the asynchronous save begins.
+assert.ok(html.includes("async function settle(ok,rt,responseIndex){\n if(st.phase!=='play')return;\n st.phase='reveal';"),
   'Selection/timeout settlement must enter the reveal phase before saving.');
-assert.match(html, /function continueAfterTrial\\(ok\\)\\{\\s*st\\.phase=['"]reveal['"];?/,
+assert.ok(html.includes("function continueAfterTrial(ok){\n st.phase='reveal';"),
   'The saved-round continuation must preserve the reveal phase.');
-assert.match(html, /st\\.phase===['"]reveal['"]&&i===st\\.odd/,
+assert.ok(html.includes("st.phase==='reveal'&&i===st.odd"),
   'The correct orbit must be highlighted while the reveal phase is active.');
 
 assert.doesNotMatch(html, /service_role/i);
